@@ -1,0 +1,19 @@
+{
+    "name": "acquia/zendesk-api",
+    "description": "A PHP library for interacting with the Zendesk REST API.",
+    "license": "GPL",
+    "authors": [
+        {
+            "name": "Richard Burford",
+            "email": "richard.burford@acquia.com"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "3.7.30"
+    },
+    "autoload": {
+        "psr-0": {
+            "Acquia": "src/"
+        }
+    }
+}
