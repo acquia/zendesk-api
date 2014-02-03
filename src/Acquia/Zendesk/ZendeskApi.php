@@ -112,13 +112,13 @@ class ZendeskApi {
         $body = json_encode($body);
       }
       curl_setopt($handle, CURLOPT_POSTFIELDS, $body);
-      $headers[] = 'Content-Length: ' . strlen($body);
+      $headers['Content-Length'] = strlen($body);
     }
-    $headers[] = 'Accept: application/json';
-    $headers[] = 'Content-Type: application/json; charset=utf-8';
-    if (!empty($headers)) {
-      curl_setopt($handle, CURLOPT_HTTPHEADER, $headers);
+    $headers['Accept'] = 'application/json';
+    if (empty($headers['Content-Type'])) {
+      $headers['Content-Type'] = 'application/json; charset=utf-8';
     }
+    curl_setopt($handle, CURLOPT_HTTPHEADER, $this->formatHeaders($headers));
     curl_setopt($handle, CURLOPT_CUSTOMREQUEST, $method);
     curl_setopt($handle, CURLOPT_FOLLOWLOCATION, TRUE);
     curl_setopt($handle, CURLOPT_MAXREDIRS, 10);
@@ -147,6 +147,25 @@ class ZendeskApi {
     }
 
     return $data;
+  }
+
+  /**
+   * Format the HTTP headers in the format curl requires.
+   *
+   * @param array $headers
+   *   An associative array of HTTP headers, keyed by header field name with the
+   *   header field value as the value.
+   *
+   * @return array
+   *   An indexed array of individual fully-formed HTTP headers, as expected by
+   *   curl's CURLOPT_HTTPHEADER option.
+   */
+  public function formatHeaders($headers) {
+    $formatted = array();
+    foreach ($headers as $name => $value) {
+      $formatted[] = sprintf('%s: %s', $name, $value);
+    }
+    return $formatted;
   }
 
 }

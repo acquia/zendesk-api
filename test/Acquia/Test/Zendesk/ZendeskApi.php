@@ -96,5 +96,23 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($actual, $expected);
   }
 
+  /**
+   * Tests formatHeaders().
+   */
+  public function testFormatHeaders() {
+    $headers = array(
+      'Content-Type' => 'application/json; charset=utf-8',
+      'Accept' => 'application/json',
+      'Accept-Encoding' => 'gzip, deflate',
+    );
+    $actual = $this->zendesk->formatHeaders($headers);
+    $expected = array(
+      'Content-Type: application/json; charset=utf-8',
+      'Accept: application/json',
+      'Accept-Encoding: gzip, deflate',
+    );
+    $this->assertEquals($actual, $expected);
+  }
+
 }
 
