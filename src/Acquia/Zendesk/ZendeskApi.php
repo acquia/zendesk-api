@@ -4,6 +4,7 @@ namespace Acquia\Zendesk;
 
 use Acquia\Zendesk\MissingCredentialsException;
 use Acquia\Zendesk\CurlErrorException;
+use Acquia\Zendesk\TooManyRequestsException;
 use Acquia\Zendesk\ClientErrorException;
 use Acquia\Zendesk\ServerErrorException;
 
@@ -86,6 +87,8 @@ class ZendeskApi {
     curl_setopt($handle, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt($handle, CURLOPT_TIMEOUT, 10);
     curl_setopt($handle, CURLOPT_ENCODING, '');
+    curl_setopt($handle, CURLOPT_VERBOSE, TRUE);
+    curl_setopt($handle, CURLOPT_HEADER, TRUE);
 
     $response = curl_exec($handle);
     if (curl_errno($handle) > 0) {
@@ -94,16 +97,36 @@ class ZendeskApi {
       throw new CurlErrorException($curl_error, $curl_errno);
     }
 
-    $data = json_decode($response);
     $status = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+    $header_size = curl_getinfo($handle, CURLINFO_HEADER_SIZE);
+    $header = substr($response, 0, $header_size);
+    $body = substr($response, $header_size);
+    $data = json_decode($body);
     curl_close($handle);
 
     $status_class = floor($status / 100);
+    if ($status_class >= 4) {
+      if (!empty($data->error)) {
+        $error_message = sprintf('%s: %s', $status, $data->error);
+      }
+      else {
+        $error_message = sprintf('%s: %s', $status, $data);
+      }
+    }
     switch ($status_class) {
       case '4':
-        throw new ClientErrorException($data->error, $status);
+        if ($status === 429) {
+          // Handle rate limiting by throwing a custom exception. Set the
+          // Retry-After response header as an instance variable so client code
+          // may react appropriately.
+          $retry_after = $this->parseResponseHeader('Retry-After', $header);
+          $exception = new TooManyRequestsException('The rate limit has been reached. Please try again.');
+          $exception->setRetryAfter($retry_after);
+          throw $exception;
+        }
+        throw new ClientErrorException($error_message, $status);
       case '5':
-        throw new ServerErrorException($data->error, $status);
+        throw new ServerErrorException($error_message, $status);
     }
 
     return $data;
@@ -168,5 +191,25 @@ class ZendeskApi {
     return $formatted;
   }
 
+  /**
+   * Parses the value of a given response header.
+   *
+   * @param string $header_name
+   *   The name of the response header.
+   * @param string $header
+   *   The response header string to parse.
+   *
+   * @return string
+   *   The response header value.
+   */
+  public function parseResponseHeader($header_name, $header) {
+    // Normalize line-endings.
+    $header = str_replace(array("\r", "\r\n"), "\n", $header);
+    foreach (explode("\n", $header) as $header_line) {
+      if (preg_match("/^${header_name}: (?P<value>.+)/", $header_line, $matches)) {
+        return $matches['value'];
+      }
+    }
+  }
 }
 

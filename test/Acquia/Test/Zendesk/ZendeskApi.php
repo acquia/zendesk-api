@@ -114,5 +114,32 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($actual, $expected);
   }
 
+  /**
+   * Tests parseResponseHeader() with Unix-style line-endings.
+   */
+  public function testParseResponseHeaderUnix() {
+    $header = "HTTP/1.1 429\nServer: nginx/1.4.4\nDate: Mon, 03 Feb 2014 04:25:31 GMT\nContent-Type: application/json; charset=UTF-8\nContent-Length: 76\nConnection: keep-alive\nStatus: 429\nRetry-After: 59\n";
+    $actual = $this->zendesk->parseResponseHeader('Retry-After', $header);
+    $this->assertEquals($actual, '59');
+  }
+
+  /**
+   * Tests parseResponseHeader() with Mac-style line-endings.
+   */
+  public function testParseResponseHeaderMac() {
+    $header = "HTTP/1.1 429\rServer: nginx/1.4.4\rDate: Mon, 03 Feb 2014 04:25:31 GMT\rContent-Type: application/json; charset=UTF-8\rContent-Length: 76\rConnection: keep-alive\rStatus: 429\rRetry-After: 59\r";
+    $actual = $this->zendesk->parseResponseHeader('Retry-After', $header);
+    $this->assertEquals($actual, '59');
+  }
+
+  /**
+   * Tests parseResponseHeader() with Windows-style line-endings.
+   */
+  public function testParseResponseHeaderWindows() {
+    $header = "HTTP/1.1 429\r\nServer: nginx/1.4.4\r\nDate: Mon, 03 Feb 2014 04:25:31 GMT\r\nContent-Type: application/json; charset=UTF-8\r\nContent-Length: 76\r\nConnection: keep-alive\r\nStatus: 429\r\nRetry-After: 59\r\n";
+    $actual = $this->zendesk->parseResponseHeader('Retry-After', $header);
+    $this->assertEquals($actual, '59');
+  }
+
 }
 
