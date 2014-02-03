@@ -38,46 +38,6 @@ class ZendeskApi {
   }
 
   /**
-   * Gets the authentication string necessary for making API calls.
-   *
-   * @return string
-   *   The authentication string.
-   */
-  private function getAuth() {
-    return sprintf('%s/token:%s', $this->username, $this->api_key);
-  }
-
-  /**
-   * Builds the request URL.
-   *
-   * @param string $resource
-   *   The resource URI.
-   * @param array $options
-   *   An array with a "query" element containing the query string parameters.
-   *
-   * @return string
-   *   The fully-formed URL for the request.
-   */
-  public function buildRequestUrl($resource, $options = array()) {
-    $endpoint = sprintf(self::ENDPOINT_PATTERN, $this->subdomain);
-    $query = '';
-    if (!empty($options['query'])) {
-      if (is_array($options['query']) || is_object($options['query'])) {
-        $query = '?' . http_build_query($options['query']);
-      }
-      else {
-        if (strpos($options['query'], '?') === 0) {
-          $query = $options['query'];
-        }
-        else {
-          $query = '?' . $options['query'];
-        }
-      }
-    }
-    return sprintf('%s/%s.json%s', $endpoint, $resource, $query);
-  }
-
-  /**
    * Makes an HTTP request to the API.
    *
    * @param string $method
@@ -147,6 +107,46 @@ class ZendeskApi {
     }
 
     return $data;
+  }
+
+  /**
+   * Gets the authentication string necessary for making API calls.
+   *
+   * @return string
+   *   The authentication string.
+   */
+  private function getAuth() {
+    return sprintf('%s/token:%s', $this->username, $this->api_key);
+  }
+
+  /**
+   * Builds the request URL.
+   *
+   * @param string $resource
+   *   The resource URI.
+   * @param array $options
+   *   An array with a "query" element containing the query string parameters.
+   *
+   * @return string
+   *   The fully-formed URL for the request.
+   */
+  public function buildRequestUrl($resource, $options = array()) {
+    $endpoint = sprintf(self::ENDPOINT_PATTERN, $this->subdomain);
+    $query = '';
+    if (!empty($options['query'])) {
+      if (is_array($options['query']) || is_object($options['query'])) {
+        $query = '?' . http_build_query($options['query']);
+      }
+      else {
+        if (strpos($options['query'], '?') === 0) {
+          $query = $options['query'];
+        }
+        else {
+          $query = '?' . $options['query'];
+        }
+      }
+    }
+    return sprintf('%s/%s.json%s', $endpoint, $resource, $query);
   }
 
   /**
