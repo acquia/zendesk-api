@@ -1,18 +1,19 @@
 <?php
 
+use Acquia\Zendesk\ZendeskRequest;
 use Acquia\Zendesk\ZendeskApi;
 use Acquia\Zendesk\MissingCredentialsException;
 
 class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
 
-  protected $zendesk;
+  protected $client;
 
   public function setUp() {
-    $this->zendesk = new ZendeskApi('username', 'password', 'api_key');
+    $this->client = new ZendeskRequest('username', 'password', 'api_key');
   }
 
   public function tearDown() {
-    $this->zendesk = null;
+    $this->client = null;
   }
 
   /**
@@ -46,7 +47,7 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
    * Tests buildRequestUrl() with an empty query value.
    */
   public function testBuildRequestUrlEmptyQuery() {
-    $actual = $this->zendesk->buildRequestUrl('resource');
+    $actual = $this->client->buildRequestUrl('resource');
     $expected = 'https://username.zendesk.com/api/v2/resource.json';
     $this->assertEquals($actual, $expected);
   }
@@ -56,7 +57,7 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
    */
   public function testBuildRequestUrlStringQuery() {
     $query_string = http_build_query(array('k1' => 'v1', 'k2' => 'v2'));
-    $actual = $this->zendesk->buildRequestUrl('resource', $query_string);
+    $actual = $this->client->buildRequestUrl('resource', $query_string);
     $expected = 'https://username.zendesk.com/api/v2/resource.json?k1=v1&k2=v2';
     $this->assertEquals($actual, $expected);
   }
@@ -66,7 +67,7 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
    */
   public function testBuildRequestUrlPrefixedStringQuery() {
     $query_string = '?' . http_build_query(array('k1' => 'v1', 'k2' => 'v2'));
-    $actual = $this->zendesk->buildRequestUrl('resource', $query_string);
+    $actual = $this->client->buildRequestUrl('resource', $query_string);
     $expected = 'https://username.zendesk.com/api/v2/resource.json?k1=v1&k2=v2';
     $this->assertEquals($actual, $expected);
   }
@@ -78,7 +79,7 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
     $parameters = new stdClass();
     $parameters->k1 = 'v1';
     $parameters->k2 = 'v2';
-    $actual = $this->zendesk->buildRequestUrl('resource', $parameters);
+    $actual = $this->client->buildRequestUrl('resource', $parameters);
     $expected = 'https://username.zendesk.com/api/v2/resource.json?k1=v1&k2=v2';
     $this->assertEquals($actual, $expected);
   }
@@ -91,7 +92,7 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
       'k1' => 'v1',
       'k2' => 'v2',
     );
-    $actual = $this->zendesk->buildRequestUrl('resource', $parameters);
+    $actual = $this->client->buildRequestUrl('resource', $parameters);
     $expected = 'https://username.zendesk.com/api/v2/resource.json?k1=v1&k2=v2';
     $this->assertEquals($actual, $expected);
   }
@@ -105,7 +106,7 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
       'Accept' => 'application/json',
       'Accept-Encoding' => 'gzip, deflate',
     );
-    $actual = $this->zendesk->formatRequestHeaders($headers);
+    $actual = $this->client->formatRequestHeaders($headers);
     $expected = array(
       'Content-Type: application/json; charset=utf-8',
       'Accept: application/json',
@@ -119,7 +120,7 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
    */
   public function testParseResponseHeadersUnix() {
     $header = "HTTP/1.1 429\nServer: nginx/1.4.4\nDate: Mon, 03 Feb 2014 04:25:31 GMT\nContent-Type: application/json; charset=UTF-8\nContent-Length: 76\nConnection: keep-alive\nStatus: 429\nRetry-After: 59\n";
-    $headers = $this->zendesk->parseResponseHeaders($header, strlen($header));
+    $headers = $this->client->parseResponseHeaders($header, strlen($header));
     $actual = $headers['Retry-After'];
     $this->assertEquals($actual, '59');
   }
@@ -129,7 +130,7 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
    */
   public function testParseResponseHeadersMac() {
     $header = "HTTP/1.1 429\rServer: nginx/1.4.4\rDate: Mon, 03 Feb 2014 04:25:31 GMT\rContent-Type: application/json; charset=UTF-8\rContent-Length: 76\rConnection: keep-alive\rStatus: 429\rRetry-After: 59\r";
-    $headers = $this->zendesk->parseResponseHeaders($header, strlen($header));
+    $headers = $this->client->parseResponseHeaders($header, strlen($header));
     $actual = $headers['Retry-After'];
     $this->assertEquals($actual, '59');
   }
@@ -139,7 +140,7 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
    */
   public function testParseResponseHeadersWindows() {
     $header = "HTTP/1.1 429\r\nServer: nginx/1.4.4\r\nDate: Mon, 03 Feb 2014 04:25:31 GMT\r\nContent-Type: application/json; charset=UTF-8\r\nContent-Length: 76\r\nConnection: keep-alive\r\nStatus: 429\r\nRetry-After: 59\r\n";
-    $headers = $this->zendesk->parseResponseHeaders($header, strlen($header));
+    $headers = $this->client->parseResponseHeaders($header, strlen($header));
     $actual = $headers['Retry-After'];
     $this->assertEquals($actual, '59');
   }
