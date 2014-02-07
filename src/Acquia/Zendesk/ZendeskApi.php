@@ -62,9 +62,7 @@ class ZendeskApi {
    *   An object of tickets.
    */
   public function getTickets($ticket_ids) {
-    $data = $this->request('GET', 'tickets/show_many', array(), NULL, array(
-      'query' => array('ids' => implode(',', $ticket_ids))
-    ));
+    $data = $this->request('GET', 'tickets/show_many', array('ids' => implode(',', $ticket_ids)));
     return $data->tickets;
   }
 
@@ -96,15 +94,15 @@ class ZendeskApi {
    *
    * @return object
    *   The response object of the request containing tickets matching the
-   *   search paramaters.
+   *   search parameters.
    */
   public function getTicketsSearch($search, $sort_by = NULL, $order = NULL) {
-    $query = array(
+    $parameters = array(
       'query' => $search,
       'sort_by' => $sort_by,
       'sort_order' => $order,
     );
-    return $this->request('GET', 'search', array(), NULL, array('query' => $query));
+    return $this->request('GET', 'search', $parameters);
   }
 
   /**
@@ -162,8 +160,7 @@ class ZendeskApi {
     if (empty($start_time)) {
       $start_time = time() - 86400 * 365;
     }
-    return $this->request('GET', 'exports/tickets', array(), NULL, array(
-      'query' => array('start_time' => $start_time)));
+    return $this->request('GET', 'exports/tickets', array('start_time' => $start_time));
   }
 
   /**
@@ -173,13 +170,15 @@ class ZendeskApi {
    *   The HTTP method e.g. GET.
    * @param string $resource
    *   The resource URI.
+   * @param array $parameters
+   *   An array of request parameters to generate the URL query string for the
+   *   request.
    * @param array $headers
    *   An array of additional HTTP headers.
    * @param mixed $body
    *   The body of the request.
    * @param array $options
-   *   An array of request options:
-   *   - query: An array of query string parameters to append to the URL.
+   *   An array of request options.
    *
    * @return object
    *   The response object.
@@ -190,11 +189,15 @@ class ZendeskApi {
    *   If a client error was received from the API.
    * @throws ServerErrorException
    *   If a server error was received from the API.
+   * @throws TooManyRequestsException
+   *   If the request triggered Zendesk's rate limiting feature. See the
+   *   custom exception class for how to retrieve the value of the Retry-After
+   *   header.
    */
-  public function request($method, $resource, $headers = array(), $body = NULL, $options = array()) {
+  public function request($method, $resource, $parameters = array(), $body = NULL, $headers = array(), $options = array()) {
     $handle = curl_init();
 
-    curl_setopt($handle, CURLOPT_URL, $this->buildRequestUrl($resource, $options));
+    curl_setopt($handle, CURLOPT_URL, $this->buildRequestUrl($resource, $parameters));
     curl_setopt($handle, CURLOPT_USERPWD, $this->getAuth());
     if (!empty($body)) {
       if (!is_string($body)) {
@@ -275,29 +278,36 @@ class ZendeskApi {
    *
    * @param string $resource
    *   The resource URI.
-   * @param array $options
-   *   An array with a "query" element containing the query string parameters.
+   * @param array|object|string $parameters
+   *   An array, object, or string representing the query string parameters.
    *
    * @return string
    *   The fully-formed URL for the request.
    */
-  public function buildRequestUrl($resource, $options = array()) {
+  public function buildRequestUrl($resource, $parameters = array()) {
     $endpoint = sprintf(self::ENDPOINT_PATTERN, $this->subdomain);
-    $query = '';
-    if (!empty($options['query'])) {
-      if (is_array($options['query']) || is_object($options['query'])) {
-        $query = '?' . http_build_query($options['query']);
+    $query_string = '';
+    if (!empty($parameters)) {
+      if (is_array($parameters) || is_object($parameters)) {
+        // Make sure http_build_query uses a plain ampersand character as the
+        // query argument separator (rather than the HTML entity equivalent).
+        $http_query = http_build_query($parameters, '', '&');
+        // Unfortunately, http_build_query adds numerical indexes to arrays so
+        // we have to strip those out. If an equals sign exists in any string
+        // values, it will already have been encoded (as %3D) so using one in
+        // the pattern ensures that the replacement is accurate.
+        $query_string = '?' . preg_replace('/%5B[0-9]+%5D=/U', '%5B%5D=', $http_query);
       }
       else {
-        if (strpos($options['query'], '?') === 0) {
-          $query = $options['query'];
+        if (strpos($parameters, '?') === 0) {
+          $query_string = $parameters;
         }
         else {
-          $query = '?' . $options['query'];
+          $query_string = '?' . $parameters;
         }
       }
     }
-    return sprintf('%s/%s.json%s', $endpoint, $resource, $query);
+    return sprintf('%s/%s.json%s', $endpoint, $resource, $query_string);
   }
 
   /**

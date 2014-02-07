@@ -46,7 +46,7 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
    * Tests buildRequestUrl() with an empty query value.
    */
   public function testBuildRequestUrlEmptyQuery() {
-    $actual = $this->zendesk->buildRequestUrl('resource', array('query' => null));
+    $actual = $this->zendesk->buildRequestUrl('resource');
     $expected = 'https://username.zendesk.com/api/v2/resource.json';
     $this->assertEquals($actual, $expected);
   }
@@ -55,8 +55,8 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
    * Tests buildRequestUrl() with a literal string query value.
    */
   public function testBuildRequestUrlStringQuery() {
-    $query = http_build_query(array('k1' => 'v1', 'k2' => 'v2'));
-    $actual = $this->zendesk->buildRequestUrl('resource', array('query' => $query));
+    $query_string = http_build_query(array('k1' => 'v1', 'k2' => 'v2'));
+    $actual = $this->zendesk->buildRequestUrl('resource', $query_string);
     $expected = 'https://username.zendesk.com/api/v2/resource.json?k1=v1&k2=v2';
     $this->assertEquals($actual, $expected);
   }
@@ -65,8 +65,8 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
    * Tests buildRequestUrl() with a query string starting with a question mark.
    */
   public function testBuildRequestUrlPrefixedStringQuery() {
-    $query = '?' . http_build_query(array('k1' => 'v1', 'k2' => 'v2'));
-    $actual = $this->zendesk->buildRequestUrl('resource', array('query' => $query));
+    $query_string = '?' . http_build_query(array('k1' => 'v1', 'k2' => 'v2'));
+    $actual = $this->zendesk->buildRequestUrl('resource', $query_string);
     $expected = 'https://username.zendesk.com/api/v2/resource.json?k1=v1&k2=v2';
     $this->assertEquals($actual, $expected);
   }
@@ -75,10 +75,10 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
    * Tests buildRequestUrl() with an object of parameters.
    */
   public function testBuildRequestUrlObjectQuery() {
-    $query = new stdClass();
-    $query->k1 = 'v1';
-    $query->k2 = 'v2';
-    $actual = $this->zendesk->buildRequestUrl('resource', array('query' => $query));
+    $parameters = new stdClass();
+    $parameters->k1 = 'v1';
+    $parameters->k2 = 'v2';
+    $actual = $this->zendesk->buildRequestUrl('resource', $parameters);
     $expected = 'https://username.zendesk.com/api/v2/resource.json?k1=v1&k2=v2';
     $this->assertEquals($actual, $expected);
   }
@@ -87,11 +87,11 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
    * Tests buildRequestUrl() with an array of parameters.
    */
   public function testBuildRequestUrlArrayQuery() {
-    $query = array(
+    $parameters = array(
       'k1' => 'v1',
       'k2' => 'v2',
     );
-    $actual = $this->zendesk->buildRequestUrl('resource', array('query' => $query));
+    $actual = $this->zendesk->buildRequestUrl('resource', $parameters);
     $expected = 'https://username.zendesk.com/api/v2/resource.json?k1=v1&k2=v2';
     $this->assertEquals($actual, $expected);
   }
