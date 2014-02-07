@@ -40,6 +40,233 @@ class ZendeskApi {
   }
 
   /**
+   * Gets a user by user ID.
+   *
+   * @param int $user_id
+   *   The ID of the user to retrieve.
+   *
+   * @return object
+   *   The user object associated with the given user ID.
+   */
+  public function getUser($user_id) {
+    $data = $this->request('GET', "users/${user_id}");
+    return $data->user;
+  }
+
+  /**
+   * Gets related information for a given user ID.
+   *
+   * @param int $user_id
+   *   The ID of the user to retrieve.
+   *
+   * @return object
+   *   The related information object associated with the given user ID.
+   */
+  public function getUserInformation($user_id) {
+    $data = $this->request('GET', "users/${user_id}/related");
+    return $data->user_related;
+  }
+
+  /**
+   * Gets a list of users, optionally filtered by role.
+   *
+   * @param array $roles
+   *   An array of machine-readable role names to filter the listed users.
+   *   Poassible values: "agent", "admin", and/or "end-user".
+   * @param int $custom_role_id
+   *   A custom role ID to filter the listed users.
+   *
+   * @return object
+   *   The response object of the request containing the defined set of users.
+   */
+  public function getUsers($roles = array(), $custom_role_id = NULL) {
+    $parameters = array(
+      'role' => $roles,
+      'permission_set' => $role_id,
+    );
+    return $this->request('GET', 'users', $parameters);
+  }
+
+  /**
+   * Gets a list of users in a given group.
+   *
+   * @param int $group_id
+   *   The group ID of the users to retrieve.
+   *
+   * @return object
+   *   The response object of the request containing the defined set of users.
+   */
+  public function getUsersByGroup($group_id) {
+    return $this->request('GET', "groups/${group_id}/users", $parameters);
+  }
+
+  /**
+   * Gets the users in a given organization.
+   *
+   * @param int $organization_id
+   *   The organization ID of the users to retrieve.
+   *
+   * @return object
+   *   The response object of the request containing the defined set of users.
+   */
+  public function getUsersByOrganization($organization_id) {
+    return $this->request('GET', "organizations/${organization_id}/users");
+  }
+
+  /**
+   * Gets lists of users via the Zendesk Search API.
+   *
+   * @param string $search
+   *   The search text to be matched or a search string. See the Search
+   *   Reference: https://support.zendesk.com/entries/20239737
+   *
+   * @return object
+   *   The response object of the request containing users matching the
+   *   search parameters.
+   */
+  public function getUsersSearch($search) {
+    return $this->request('GET', 'users/search', array('query' => $search));
+  }
+
+  /**
+   * Creates a user.
+   *
+   * @param array|object $user
+   *   The user information for the user to be created. Possible properties:
+   *   - name (required): The name of the user e.g. "John Doe".
+   *   - email (required): The email address of the user.
+   *   - verified (bool): Whether the account should be considered already verified
+   *     (setting this to true will create a user without sending out a
+   *     verification email.
+   *   - role: The role of the user.
+   *   - identities: An array of identities (email address, Twitter handle,
+   *     etc.) with "type" and "value" properties.
+   *
+   * @return object
+   *   The created user object.
+   */
+  public function createUser($user) {
+    $data = $this->request('POST', 'users', array('user' => $user));
+    return $data->user;
+  }
+
+  /**
+   * Modifies a user.
+   *
+   * @param int $user_id
+   *   The ID of the user to modify.
+   * @param array|object $user
+   *   The user data to modify.
+   *
+   * @return object
+   *   The modified user object.
+   */
+  public function modifyUser($user_id, $user) {
+    $data = $this->request('PUT', "users/${user_id}", array(), array('user' => $user));
+    return $data->user;
+  }
+
+  /**
+   * Deletes a user.
+   *
+   * @param int $user_id
+   *   The ID of the user to delete.
+   *
+   * @return object
+   *   The deleted user object with the "active" field set to false.
+   */
+  public function deleteUser($user_id) {
+    $data = $this->request('DELETE', "users/${user_id}");
+    return $data->user;
+  }
+
+  /**
+   * Gets a group.
+   *
+   * @param int $group_id
+   *   The ID of the group to retrieve.
+   *
+   * @return object
+   *   The group object associated with the given group ID.
+   */
+  public function getGroup($group_id) {
+    $data = $this->request('GET', "groups/${group_id}");
+    return $data->group;
+  }
+
+  /**
+   * Gets a list of groups, optionally filtered by whether they're assignable.
+   *
+   * @param bool $assignable
+   *   Whether or not to list only assignable groups.
+   *
+   * @return object
+   *  The response object of the request containing the list of groups.
+   */
+  public function getGroups($assignable = FALSE) {
+    $resource = 'groups';
+    if ($assignable) {
+      $resource .= '/assignable';
+    }
+    return $this->request('GET', $resource);
+  }
+
+  /**
+   * Gets a list of the given user's groups.
+   *
+   * @param int $user_id
+   *   The ID of the user for which to retrieve the list of groups.
+   */
+  public function getGroupsByUser($user_id) {
+    return $this->request('GET', "users/${user_id}/groups");
+  }
+
+  /**
+   * Creates a group.
+   *
+   * @param string $group_name
+   *   The name of the group to create.
+   *
+   * @return object
+   *   The response object of the request containing the created group.
+   */
+  public function createGroup($group_name) {
+    $data = $this->request('POST', 'groups', array('group' => array('name' => $group_name)));
+    return $data->group;
+  }
+
+  /**
+   * Modifies a group name.
+   *
+   * @param int $group_id
+   *   The ID of the group to modify.
+   * @param string $group_name
+   *   The new name of the group.
+   *
+   * @return object
+   *   The response object of the request containing the modified group.
+   */
+  public function modifyGroupName($group_id, $group_name) {
+    $group = array('group' => array('name' => $group_name));
+    $data = $this->request('PUT', "groups/${group_id}", NULL, $group);
+    return $data->group;
+  }
+
+  /**
+   * Deletes a group.
+   *
+   * @param int $group_id
+   *    The ID of the group to delete.
+   *
+   * @return object
+   *   The response object of the request containing the deleted group.
+   */
+  public function deleteGroup($group_id) {
+    $data = $this->request('DELETE', "groups/${group_id}");
+    return $data;
+  }
+
+  /**
    * Gets a ticket by ticket ID.
    *
    * @param int $ticket_id
