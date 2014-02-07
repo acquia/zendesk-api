@@ -232,9 +232,8 @@ class ZendeskRequest {
           // Handle rate limiting by throwing a custom exception. Set the
           // Retry-After response header as an instance variable so client code
           // may react appropriately.
-          $retry_after_seconds = $this->getResponseHeader('Retry-After');
           $exception = new TooManyRequestsException('The rate limit has been reached.');
-          $exception->setRetryAfter($retry_after_seconds);
+          $exception->setRetryAfter($this->getResponseHeader('Retry-After'));
           throw $exception;
         }
         throw new ClientErrorException($error_message, $status);
