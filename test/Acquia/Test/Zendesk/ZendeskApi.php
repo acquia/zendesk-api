@@ -97,15 +97,15 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * Tests formatHeaders().
+   * Tests formatRequestHeaders().
    */
-  public function testFormatHeaders() {
+  public function testFormatRequestHeaders() {
     $headers = array(
       'Content-Type' => 'application/json; charset=utf-8',
       'Accept' => 'application/json',
       'Accept-Encoding' => 'gzip, deflate',
     );
-    $actual = $this->zendesk->formatHeaders($headers);
+    $actual = $this->zendesk->formatRequestHeaders($headers);
     $expected = array(
       'Content-Type: application/json; charset=utf-8',
       'Accept: application/json',
@@ -115,29 +115,32 @@ class ZendeskUnitTest extends PHPUnit_Framework_TestCase {
   }
 
   /**
-   * Tests parseResponseHeader() with Unix-style line-endings.
+   * Tests parseResponseHeaders() with Unix-style line-endings.
    */
-  public function testParseResponseHeaderUnix() {
+  public function testParseResponseHeadersUnix() {
     $header = "HTTP/1.1 429\nServer: nginx/1.4.4\nDate: Mon, 03 Feb 2014 04:25:31 GMT\nContent-Type: application/json; charset=UTF-8\nContent-Length: 76\nConnection: keep-alive\nStatus: 429\nRetry-After: 59\n";
-    $actual = $this->zendesk->parseResponseHeader('Retry-After', $header);
+    $headers = $this->zendesk->parseResponseHeaders($header, strlen($header));
+    $actual = $headers['Retry-After'];
     $this->assertEquals($actual, '59');
   }
 
   /**
-   * Tests parseResponseHeader() with Mac-style line-endings.
+   * Tests parseResponseHeaders() with Mac-style line-endings.
    */
-  public function testParseResponseHeaderMac() {
+  public function testParseResponseHeadersMac() {
     $header = "HTTP/1.1 429\rServer: nginx/1.4.4\rDate: Mon, 03 Feb 2014 04:25:31 GMT\rContent-Type: application/json; charset=UTF-8\rContent-Length: 76\rConnection: keep-alive\rStatus: 429\rRetry-After: 59\r";
-    $actual = $this->zendesk->parseResponseHeader('Retry-After', $header);
+    $headers = $this->zendesk->parseResponseHeaders($header, strlen($header));
+    $actual = $headers['Retry-After'];
     $this->assertEquals($actual, '59');
   }
 
   /**
-   * Tests parseResponseHeader() with Windows-style line-endings.
+   * Tests parseResponseHeaders() with Windows-style line-endings.
    */
-  public function testParseResponseHeaderWindows() {
+  public function testParseResponseHeadersWindows() {
     $header = "HTTP/1.1 429\r\nServer: nginx/1.4.4\r\nDate: Mon, 03 Feb 2014 04:25:31 GMT\r\nContent-Type: application/json; charset=UTF-8\r\nContent-Length: 76\r\nConnection: keep-alive\r\nStatus: 429\r\nRetry-After: 59\r\n";
-    $actual = $this->zendesk->parseResponseHeader('Retry-After', $header);
+    $headers = $this->zendesk->parseResponseHeaders($header, strlen($header));
+    $actual = $headers['Retry-After'];
     $this->assertEquals($actual, '59');
   }
 

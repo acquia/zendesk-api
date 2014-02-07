@@ -15,6 +15,7 @@ class ZendeskApi {
   protected $subdomain;
   protected $username;
   protected $api_key;
+  protected $headers;
 
   /**
    * Initialize object requirements.
@@ -210,7 +211,7 @@ class ZendeskApi {
     if (empty($headers['Content-Type'])) {
       $headers['Content-Type'] = 'application/json; charset=utf-8';
     }
-    curl_setopt($handle, CURLOPT_HTTPHEADER, $this->formatHeaders($headers));
+    curl_setopt($handle, CURLOPT_HTTPHEADER, $this->formatRequestHeaders($headers));
     curl_setopt($handle, CURLOPT_CUSTOMREQUEST, $method);
     curl_setopt($handle, CURLOPT_FOLLOWLOCATION, TRUE);
     curl_setopt($handle, CURLOPT_MAXREDIRS, 10);
@@ -228,11 +229,10 @@ class ZendeskApi {
       throw new CurlErrorException($curl_error, $curl_errno);
     }
 
+    $header_length = curl_getinfo($handle, CURLINFO_HEADER_SIZE);
+    $this->headers = $this->parseResponseHeaders($response, $header_length);
+    $data = json_decode(substr($response, $header_length));
     $status = curl_getinfo($handle, CURLINFO_HTTP_CODE);
-    $header_size = curl_getinfo($handle, CURLINFO_HEADER_SIZE);
-    $header = substr($response, 0, $header_size);
-    $body = substr($response, $header_size);
-    $data = json_decode($body);
     curl_close($handle);
 
     $status_class = floor($status / 100);
@@ -250,9 +250,9 @@ class ZendeskApi {
           // Handle rate limiting by throwing a custom exception. Set the
           // Retry-After response header as an instance variable so client code
           // may react appropriately.
-          $retry_after = $this->parseResponseHeader('Retry-After', $header);
-          $exception = new TooManyRequestsException('The rate limit has been reached. Please try again.');
-          $exception->setRetryAfter($retry_after);
+          $retry_after_seconds = $this->getResponseHeader('Retry-After');
+          $exception = new TooManyRequestsException('The rate limit has been reached.');
+          $exception->setRetryAfter($retry_after_seconds);
           throw $exception;
         }
         throw new ClientErrorException($error_message, $status);
@@ -321,7 +321,7 @@ class ZendeskApi {
    *   An indexed array of individual fully-formed HTTP headers, as expected by
    *   curl's CURLOPT_HTTPHEADER option.
    */
-  public function formatHeaders($headers) {
+  public function formatRequestHeaders($headers) {
     $formatted = array();
     foreach ($headers as $name => $value) {
       $formatted[] = sprintf('%s: %s', $name, $value);
@@ -330,24 +330,56 @@ class ZendeskApi {
   }
 
   /**
-   * Parses the value of a given response header.
+   * Parses the response headers to an array.
    *
-   * @param string $header_name
+   * @param string $response
+   *   The raw response to parse parse the headers from.
+   *
+   * @return array
+   *   An array of response headers.
+   */
+  public function parseResponseHeaders($response, $header_length = NULL) {
+    if (empty($header_length)) {
+      $header_length = strpos($response, "\r\n\r\n");
+    }
+    $header = substr($response, 0, $header_length);
+
+    // Normalize line-endings.
+    $header = str_replace(array("\r\n", "\r"), "\n", $header);
+
+    $headers = array();
+    foreach (explode("\n", $header) as $header_line) {
+      if ($delimiter_position = strpos($header_line, ':')) {
+        $header_name = trim(substr($header_line, 0, $delimiter_position));
+        $header_value = trim(substr($header_line, $delimiter_position + 1));
+        $headers[$header_name] = $header_value;
+      }
+    }
+    return $headers;
+  }
+
+  /**
+   * Gets the response headers associated with the previous request.
+   */
+  public function getResponseHeaders() {
+    return $this->headers;
+  }
+
+  /**
+   * Gets the value of a given response header by name.
+   *
+   * @param string $name
    *   The name of the response header.
-   * @param string $header
-   *   The response header string to parse.
    *
    * @return string
    *   The response header value.
    */
-  public function parseResponseHeader($header_name, $header) {
-    // Normalize line-endings.
-    $header = str_replace(array("\r", "\r\n"), "\n", $header);
-    foreach (explode("\n", $header) as $header_line) {
-      if (preg_match("/^${header_name}: (?P<value>.+)/", $header_line, $matches)) {
-        return $matches['value'];
-      }
+  public function getResponseHeader($name) {
+    if (!empty($this->headers[$name])) {
+      return $this->headers[$name];
     }
+    return FALSE;
   }
+
 }
 
