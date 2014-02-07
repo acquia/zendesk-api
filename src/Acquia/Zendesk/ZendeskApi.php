@@ -223,7 +223,8 @@ class ZendeskApi {
     curl_setopt($handle, CURLOPT_HEADER, TRUE);
 
     $response = curl_exec($handle);
-    if (curl_errno($handle) > 0) {
+    $curl_errno = curl_errno($handle);
+    if ($curl_errno > 0) {
       $curl_error = sprintf('Curl error: %s', curl_error($handle));
       curl_close($handle);
       throw new CurlErrorException($curl_error, $curl_errno);
