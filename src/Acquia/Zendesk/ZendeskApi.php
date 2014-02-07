@@ -393,6 +393,30 @@ class ZendeskApi {
   }
 
   /**
+   * Creates a ticket.
+   *
+   * @param array|object $ticket
+   *   The ticket information for the ticket to be created.
+   *   Example properties:
+   *   - requester.name: The name of the requester e.g. "John Doe".
+   *   - requester.email: The email address of the requester.
+   *   - subject (required): The subject of the ticket.
+   *   - comment.body (required): The body of the ticket.
+   *   - type: The type of the ticket. Possible values: "problem", "incident",
+   *     "question", and "task".
+   *   - priority: The priority of the ticket. Possible valyes: "low", "normal",
+   *     "high", and "urgent".
+   *   - custom_fields: An array of the custom fields of the ticket.
+   *
+   * @return object
+   *   The created ticket object.
+   */
+  public function createTicket($ticket) {
+    $data = $this->request('POST', 'tickets', array(), array('ticket' => $ticket));
+    return $data->ticket;
+  }
+
+  /**
    * Makes a request via ZendeskRequest.
    *
    * @param string $method
