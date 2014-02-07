@@ -65,7 +65,7 @@ class ZendeskRequest {
   }
 
   /**
-   * Format the HTTP headers in the format curl requires.
+   * Formats the HTTP headers in the format curl requires.
    *
    * @param array $headers
    *   An associative array of HTTP headers, keyed by header field name with the
