@@ -1,7 +1,7 @@
 {
     "name": "acquia/zendesk-api",
     "description": "A PHP library for interacting with the Zendesk REST API.",
-    "license": "GPL",
+    "license": "MIT",
     "authors": [
         {
             "name": "Richard Burford",
