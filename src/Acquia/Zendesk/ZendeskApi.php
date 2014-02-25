@@ -404,7 +404,7 @@ class ZendeskApi {
    *   - comment.body (required): The body of the ticket.
    *   - type: The type of the ticket. Possible values: "problem", "incident",
    *     "question", and "task".
-   *   - priority: The priority of the ticket. Possible valyes: "low", "normal",
+   *   - priority: The priority of the ticket. Possible values: "low", "normal",
    *     "high", and "urgent".
    *   - custom_fields: An array of the custom fields of the ticket.
    *
