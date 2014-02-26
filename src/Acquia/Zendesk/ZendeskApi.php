@@ -282,30 +282,24 @@ class ZendeskApi {
   }
 
   /**
-   * Gets multiple tickets associated with a given list of ticket IDs.
+   * Gets lists of tickets, optionally associated with given ticket IDs.
+   *
+   * This method may not return all tickets due to ticket archiving.
    *
    * @param array $ticket_ids
    *   An array of ticket IDs.
    *
    * @return object
-   *   An object of tickets.
+   *   An object of tickets in chronological order.
    */
-  public function getTickets($ticket_ids) {
-    $data = $this->request('GET', 'tickets/show_many', array('ids' => implode(',', $ticket_ids)));
-    return $data->tickets;
-  }
-
-  /**
-   * Gets all tickets in chronological order.
-   *
-   * As pointed out in the Zendesk API documentation, this method may not
-   * actually return all of the tickets due to ticket archiving.
-   *
-   * @return
-   *   The response object of the request containing all of the tickets.
-   */
-  public function getTicketsAll() {
-    return $this->request('GET', 'tickets');
+  public function getTickets($ticket_ids = NULL) {
+    if (!empty($ticket_ids)) {
+      $data = $this->request('GET', 'tickets/show_many', array('ids' => implode(',', $ticket_ids)));
+    }
+    else {
+      $data = $this->request('GET', 'tickets');
+    }
+    return $data;
   }
 
   /**
@@ -414,6 +408,92 @@ class ZendeskApi {
   public function createTicket($ticket) {
     $data = $this->request('POST', 'tickets', array(), array('ticket' => $ticket));
     return $data->ticket;
+  }
+
+  /**
+   * Deletes a ticket.
+   *
+   * @param int $ticket_id
+   *   The ID of the ticket to delete.
+   *
+   * @return object
+   *   The deleted ticket object.
+   */
+  public function deleteTicket($ticket_id) {
+    $data = $this->request('DELETE', "tickets/$ticket_id}");
+    // @todo Check return value.
+    return $data->ticket;
+  }
+
+  /**
+   * Creates an upload.
+   *
+   * @param string $filename
+   *   The name of the file.
+   * @param string $filepath
+   *   The path to the file.
+   * @param string $token
+   *   An optional token to use to identify the upload.
+   *
+   * @return object
+   *   The response object of the request.
+   */
+  public function createUpload($filename, $filepath, $token = NULL) {
+    $body = file_get_contents($filepath);
+    $parameters = array(
+      'filename' => $filename,
+      'token' => $token,
+    );
+    $headers = array(
+      // @todo Get the proper mime type of the file.
+      'Content-Type' => 'application/binary',
+    );
+    // @todo Test the return value.
+    return $this->request('POST', 'uploads', $parameters, $body, $headers);
+  }
+
+  /**
+   * Deletes an upload.
+   *
+   * @param string $token
+   *   The token of the upload to delete.
+   *
+   * @return object
+   *   The response object of the request.
+   */
+  public function deleteUpload($token) {
+    // @todo Test the return value.
+    return $this->request('DELETE', "uploads/${token}");
+  }
+
+  /**
+   * Gets an attachment.
+   *
+   * @param int $attachment_id
+   *   The ID of the attachment to retrieve.
+   *
+   * @return object
+   *   The attachment object.
+   */
+  public function getAttachment($attachment_id) {
+    // @todo Test the return value.
+    $data = $this->request('GET', "attachments/${attachment_id}");
+    return $data->attachment;
+  }
+
+  /**
+   * Deletes an attachment.
+   *
+   * @param int $attachment_id
+   *   The ID of the attachment to delete.
+   *
+   * @return object
+   *   The attachment object.
+   */
+  public function deleteAttachment($attachment_id) {
+    // @todo Test the return value.
+    $data = $this->request('DELETE', "attachments/${attachment_id}");
+    return $data->attachment;
   }
 
   /**
