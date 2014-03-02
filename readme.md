@@ -1,7 +1,7 @@
 Zendesk API
 ===========
 
-[![Build Status](https://travis-ci.org/psynaptic/zendesk-api.png?branch=master)](https://travis-ci.org/psynaptic/zendesk-api)
+[![Build Status](https://travis-ci.org/acquia/zendesk-api.png?branch=master)](https://travis-ci.org/acquia/zendesk-api)
 
 This package is a PHP interface to the Zendesk REST API.
 
