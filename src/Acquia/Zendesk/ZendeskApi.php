@@ -83,7 +83,7 @@ class ZendeskApi {
   public function getUsers($roles = array(), $custom_role_id = NULL) {
     $parameters = array(
       'role' => $roles,
-      'permission_set' => $role_id,
+      'permission_set' => $custom_role_id,
     );
     return $this->request('GET', 'users', $parameters);
   }
@@ -93,11 +93,20 @@ class ZendeskApi {
    *
    * @param int $group_id
    *   The group ID of the users to retrieve.
+   * @param array $roles
+   *   An array of machine-readable role names to filter the listed users.
+   *   Poassible values: "agent", "admin", and/or "end-user".
+   * @param int $custom_role_id
+   *   A custom role ID to filter the listed users.
    *
    * @return object
    *   The response object of the request containing the defined set of users.
    */
-  public function getUsersByGroup($group_id) {
+  public function getUsersByGroup($group_id, $roles = array(), $custom_role_id = NULL) {
+    $parameters = array(
+      'role' => $roles,
+      'permission_set' => $custom_role_id,
+    );
     return $this->request('GET', "groups/${group_id}/users", $parameters);
   }
 
