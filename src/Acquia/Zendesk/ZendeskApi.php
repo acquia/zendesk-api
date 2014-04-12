@@ -36,6 +36,7 @@ class ZendeskApi {
       $this->client = new ZendeskRequest($subdomain, $username, $api_key);
     }
     else {
+      // @todo Pass credentials into the injected client object.
       $this->client = $client;
     }
   }
@@ -149,6 +150,40 @@ class ZendeskApi {
   public function createUser($user) {
     $data = $this->request('POST', 'users', array('user' => $user));
     return $data->user;
+  }
+
+  /**
+   * Ensure a user exists by creating it if necessary.
+   *
+   * This method will overwrite an existing user entity's properties by those
+   * in the provided user entity.
+   *
+   * @param array|object $user
+   *   The user information for the user to be created or modified. See the
+   *   createUser method documentation for further details.
+   *
+   * @return object
+   *   The created or modified user object.
+   */
+  public function ensureUser($user) {
+    if (is_array($user)) {
+      $user = (object) $user;
+    }
+
+    // Search for an existing user by email.
+    $result = $this->getUsersSearch('email:' . $user->email);
+
+    // If the user exists, modify the user based on the provided user entity.
+    if (!empty($result->users[0])) {
+      $existing_user = $result->users[0];
+      $composite_user = array_merge($existing_user, $user);
+      $this->modifyUser($existing_user->id, $composite_user);
+    }
+    else {
+      // Otherwise, if the user does not exist, just go ahead and create the
+      // user.
+      $this->createUser($user);
+    }
   }
 
   /**
@@ -293,7 +328,7 @@ class ZendeskApi {
    *   An object of tickets in chronological order.
    */
   public function getTickets($ticket_ids = NULL) {
-    if (!empty($ticket_ids)) {
+    if (!empty($ticket_ids) && is_array($ticket_ids)) {
       $data = $this->request('GET', 'tickets/show_many', array('ids' => implode(',', $ticket_ids)));
     }
     else {
@@ -411,18 +446,35 @@ class ZendeskApi {
   }
 
   /**
+   * Modifies a ticket.
+   *
+   * @param int $ticket_id
+   *   The ID of the ticket to modify.
+   * @param array|object $ticket_data
+   *   The ticket data to modify.
+   *
+   * @return object
+   *   The response object of the request.
+   */
+  public function modifyTicket($ticket_id, $ticket_data) {
+    $ticket = array('ticket' => $ticket_data);
+    $data = $this->request('PUT', "tickets/${ticket_id}", $ticket);
+    return $data;
+  }
+
+  /**
    * Deletes a ticket.
    *
    * @param int $ticket_id
    *   The ID of the ticket to delete.
    *
-   * @return object
-   *   The deleted ticket object.
+   * @return bool
+   *   Whether or not the delete request was successful.
    */
   public function deleteTicket($ticket_id) {
-    $data = $this->request('DELETE', "tickets/$ticket_id}");
-    // @todo Check return value.
-    return $data->ticket;
+    $data = $this->request('DELETE', "tickets/${ticket_id}");
+    $headers = $this->client->getResponseHeaders();
+    return $headers['Status'] === '200 OK';
   }
 
   /**
