@@ -176,7 +176,7 @@ class ZendeskApi {
     // If the user exists, modify the user based on the provided user entity.
     if (!empty($result->users[0])) {
       $existing_user = $result->users[0];
-      $composite_user = array_merge($existing_user, $user);
+      $composite_user = array_merge((array) $existing_user, (array) $user);
       $this->modifyUser($existing_user->id, $composite_user);
     }
     else {
