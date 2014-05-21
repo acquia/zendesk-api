@@ -917,7 +917,7 @@ class ZendeskApi {
    *   An array of request options.
    *
    * @return object
-   *   The response object.
+   *   The response object of the request.
    */
   public function request($method, $resource, $parameters = array(), $body = NULL, $headers = array(), $options = array()) {
     if ($this->debug) {
