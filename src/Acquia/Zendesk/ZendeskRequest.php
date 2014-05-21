@@ -4,6 +4,7 @@ namespace Acquia\Zendesk;
 
 use Acquia\Zendesk\CurlErrorException;
 use Acquia\Zendesk\ClientErrorException;
+use Acquia\Zendesk\RecordNotFoundException;
 use Acquia\Zendesk\TooManyRequestsException;
 use Acquia\Zendesk\ServerErrorException;
 
@@ -228,23 +229,37 @@ class ZendeskRequest {
     $status_class = floor($status / 100);
     if ($status_class >= 4) {
       if (!empty($data->error)) {
-        $error_message = sprintf('%s: %s', $status, $data->error);
+        $error_message = sprintf('%s %s: %s', $status, $data->error, print_r($data, TRUE));
+      }
+      elseif (is_string($data)) {
+        $error_message = sprintf('%s %s', $status, $data);
       }
       else {
-        $error_message = sprintf('%s: %s', $status, $data);
+        $error_message = sprintf('%s %s', $status, print_r($data, TRUE));
       }
     }
     switch ($status_class) {
       case '4':
-        if ($status === 429) {
-          // Handle rate limiting by throwing a custom exception. Set the
-          // Retry-After response header as an instance variable so client code
-          // may react appropriately.
-          $exception = new TooManyRequestsException('The rate limit has been reached.');
-          $exception->setRetryAfter($this->getResponseHeader('Retry-After'));
-          throw $exception;
+        switch ($status) {
+          case 404:
+            // Deleting a non-existent record results in a client error. Throw
+            // a meaningful exception so it may be handled by client code.
+            if (!empty($data->error) && trim($data->error) === 'RecordNotFound') {
+              throw new RecordNotFoundException($error_message, $status);
+            }
+            break;
+
+          case 429:
+            // Handle rate limiting by throwing a custom exception. Set the
+            // Retry-After response header as an instance variable so client
+            // code may react appropriately.
+            $exception = new TooManyRequestsException('The rate limit has been reached.');
+            $exception->setRetryAfter($this->getResponseHeader('Retry-After'));
+            throw $exception;
         }
-        throw new ClientErrorException($error_message, $status);
+
+        throw new ClientErrorException($error_message, $status, NULL, $data);
+
       case '5':
         throw new ServerErrorException($error_message, $status);
     }
@@ -253,4 +268,3 @@ class ZendeskRequest {
   }
 
 }
-

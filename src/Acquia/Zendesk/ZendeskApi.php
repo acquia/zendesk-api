@@ -229,15 +229,18 @@ class ZendeskApi {
   /**
    * Deletes a user.
    *
+   * If attempting to delete a non-existent record, it is the caller's
+   * responsibility to catch the exception. The HTTP response code and message
+   * are stored in the exception instance.
+   *
    * @param int $user_id
    *   The ID of the user to delete.
    *
-   * @return object
-   *   The deleted user object with the "active" field set to false.
+   * @throws \Acquia\Zendesk\RecordNotFoundException
+   *   If attempting to delete a non-existent record.
    */
   public function deleteUser($user_id) {
-    $data = $this->request('DELETE', "users/${user_id}");
-    return $data->user;
+    $this->request('DELETE', "users/${user_id}");
   }
 
   /**
@@ -315,15 +318,18 @@ class ZendeskApi {
   /**
    * Deletes a group.
    *
+   * If attempting to delete a non-existent record, it is the caller's
+   * responsibility to catch the exception. The HTTP response code and message
+   * are stored in the exception instance.
+   *
    * @param int $group_id
    *    The ID of the group to delete.
    *
-   * @return object
-   *   The response object of the request containing the deleted group.
+   * @throws \Acquia\Zendesk\RecordNotFoundException
+   *   If attempting to delete a non-existent record.
    */
   public function deleteGroup($group_id) {
-    $data = $this->request('DELETE', "groups/${group_id}");
-    return $data;
+    $this->request('DELETE', "groups/${group_id}");
   }
 
   /**
@@ -489,16 +495,18 @@ class ZendeskApi {
   /**
    * Deletes a ticket.
    *
+   * If attempting to delete a non-existent record, it is the caller's
+   * responsibility to catch the exception. The HTTP response code and message
+   * are stored in the exception instance.
+   *
    * @param int $ticket_id
    *   The ID of the ticket to delete.
    *
-   * @return bool
-   *   Whether or not the delete request was successful.
+   * @throws \Acquia\Zendesk\RecordNotFoundException
+   *   If attempting to delete a non-existent record.
    */
   public function deleteTicket($ticket_id) {
-    $data = $this->request('DELETE', "tickets/${ticket_id}");
-    $headers = $this->client->getResponseHeaders();
-    return $headers['Status'] === '200 OK';
+    $this->request('DELETE', "tickets/${ticket_id}");
   }
 
   /**
@@ -531,15 +539,18 @@ class ZendeskApi {
   /**
    * Deletes an upload.
    *
+   * If attempting to delete a non-existent record, it is the caller's
+   * responsibility to catch the exception. The HTTP response code and message
+   * are stored in the exception instance.
+   *
    * @param string $token
    *   The token of the upload to delete.
    *
-   * @return object
-   *   The response object of the request.
+   * @throws \Acquia\Zendesk\RecordNotFoundException
+   *   If attempting to delete a non-existent record.
    */
   public function deleteUpload($token) {
-    // @todo Test the return value.
-    return $this->request('DELETE', "uploads/${token}");
+    $this->request('DELETE', "uploads/${token}");
   }
 
   /**
@@ -560,16 +571,18 @@ class ZendeskApi {
   /**
    * Deletes an attachment.
    *
+   * If attempting to delete a non-existent record, it is the caller's
+   * responsibility to catch the exception. The HTTP response code and message
+   * are stored in the exception instance.
+   *
    * @param int $attachment_id
    *   The ID of the attachment to delete.
    *
-   * @return object
-   *   The attachment object.
+   * @throws \Acquia\Zendesk\RecordNotFoundException
+   *   If attempting to delete a non-existent record.
    */
   public function deleteAttachment($attachment_id) {
-    // @todo Test the return value.
-    $data = $this->request('DELETE', "attachments/${attachment_id}");
-    return $data->attachment;
+    $this->request('DELETE', "attachments/${attachment_id}");
   }
 
   /**
