@@ -333,6 +333,278 @@ class ZendeskApi {
   }
 
   /**
+   * Gets an organization.
+   *
+   * @param int $organization_id
+   *   The organization ID to retrieve.
+   *
+   * @return object
+   *   The organization object from the response.
+   */
+  public function getOrganization($organization_id) {
+    $data = $this->request('GET', "organizations/${organization_id}");
+    return $data->organization;
+  }
+
+  /**
+   * Gets all organizations.
+   *
+   * @param int $page
+   *   The page of results to fetch.
+   *
+   * @return object
+   *   The response object of the request.
+   */
+  public function getOrganizations($page = 1, $limit = 100) {
+    return $this->requestCollection('organizations', array(), $page, $limit);
+  }
+
+  /**
+   * Gets a user's organizations.
+   *
+   * @param int $user_id
+   *   The user ID for which to retrieve the organizations.
+   * @param int $page
+   *   The page of results to fetch.
+   * @param int $limit
+   *   The number of items to fetch per page.
+   *
+   * @return object
+   *   The response object of the request.
+   */
+  public function getOrganizationsByUser($user_id, $page = 1, $limit = 100) {
+    return $this->requestCollection("users/${user_id}/organizations", array(), $page, $limit);
+  }
+
+  /**
+   * Autocompletes organizations.
+   *
+   * @param int $search_term
+   *   The search term to autocomplete.
+   * @param int $page
+   *   The page of results to fetch.
+   * @param int $limit
+   *   The number of items to fetch per page.
+   *
+   * @return object
+   *   The response object of the request.
+   */
+  public function autocompleteOrganizations($search_term, $page = 1, $limit = 100) {
+    $parameters = array(
+      'name' => $search_term,
+      'page' => $page,
+      'limit' => $limit,
+    );
+    // This should technically be a GET request since no data is changed on the
+    // server but using that returns a 400 Bad Request response.
+    return $this->request('POST', 'organizations/autocomplete', $parameters);
+  }
+
+  /**
+   * Gets an organization's meta data.
+   *
+   * @param int $organization_id
+   *   The organization ID whose meta data to retrieve.
+   *
+   * @return object
+   *   The meta data object from the response.
+   */
+  public function getOrganizationMetadata($organization_id) {
+    $data = $this->request('GET', "organizations/${organization_id}/related");
+    return $data->organization_related;
+  }
+
+  /**
+   * Creates an organization.
+   *
+   * @param string $name
+   *   The name of the organization to create.
+   *
+   * @return object
+   *   The created organization object.
+   */
+  public function createOrganization($name) {
+    $parameters = array(
+      'organization' => array(
+        'name' => $name,
+      ),
+    );
+    $data = $this->request('POST', 'organizations', $parameters);
+    return $data->organization;
+  }
+
+  /**
+   * Create many organizations.
+   *
+   * @param string[] $names
+   *   The names of the organizations to create.
+   *
+   * @return object
+   *   The job status object from the response.
+   */
+  public function createOrganizations($names) {
+    $body = array(
+      'organizations' => array(),
+    );
+    foreach ($names as $name) {
+      $body['organizations'][]['name'] = $name;
+    }
+    $data = $this->request('POST', 'organizations/create_many', array(), $body);
+    return $data->job_status;
+  }
+
+  /**
+   * Updates an organization.
+   *
+   * @param int $organization_id
+   *   The organization ID to update.
+   * @param array $data
+   *   The data to update on the organization.
+   *
+   * @return object
+   *   The updated organization object.
+   */
+  public function updateOrganization($organization_id, $organization) {
+    $body = array(
+      'organization' => $organization,
+    );
+    $data = $this->request('PUT', "organizations/${organization_id}", array(), $body);
+    return $data->organization;
+  }
+
+  /**
+   * Deletes an organization.
+   *
+   * If attempting to delete a non-existent record, it is the caller's
+   * responsibility to catch the exception. The HTTP response code and message
+   * are stored in the exception instance.
+   *
+   * @param int $organization_id
+   *   The organization ID to delete.
+   *
+   * @throws \Acquia\Zendesk\RecordNotFoundException
+   *   If attempting to delete a non-existent record.
+   */
+  public function deleteOrganization($organization_id) {
+    $this->request('DELETE', "organizations/${organization_id}");
+  }
+
+  /**
+   * Search organizations.
+   *
+   * @param string $search_term
+   *   The search term.
+   * @param int $page
+   *   The page of results to fetch.
+   *
+   * @return object
+   *   The response object of the request.
+   */
+  public function searchOrganizations($search_term, $page = 1) {
+    $parameters = array(
+      'external_id' => $search_term,
+      'page' => $page,
+    );
+    // This doesn't seem to work, despite it being correct as per the beta
+    // documentation. Then again, the documentation is inconsistent about the
+    // endpoint to use. The "external_id" parameter doesn't seem like the
+    // correct name for a search term field.
+    $data = $this->request('GET', 'organizations/search', $parameters);
+    return $data;
+  }
+
+  /**
+   * Gets an individual organization membership.
+   *
+   * @param int $user_id
+   *   The user ID on which the membership exists.
+   * @param int $membership_id
+   *   The ID of the membership to retrieve.
+   *
+   * @return object
+   *   The response object of the request.
+   */
+  public function getMembership($user_id, $membership_id) {
+    $data = $this->request('GET', "users/${user_id}/organization_memberships/${membership_id}");
+    return $data->organization_membership;
+  }
+
+  /**
+   * Gets a list of organization memberships by user ID.
+   *
+   * @param int $user_id
+   *   The user ID on which the memberships exist.
+   * @param int $page
+   *   The page of results to fetch.
+   * @param int $limit
+   *   The number of items to fetch per page.
+   *
+   * @return object
+   *   The response object of the request.
+   */
+  public function getMemberships($user_id, $page = 1, $limit = 100) {
+    $resource = "users/${user_id}/organization_memberships";
+    return $this->requestCollection($resource, array(), $page, $limit);
+  }
+
+  /**
+   * Creates an organization membership.
+   *
+   * @param int $user_id
+   *   The user ID on which to create the membership.
+   * @param int $organization_id
+   *   The organization ID to assign to the user.
+   *
+   * @return object
+   *   The response object of the request.
+   */
+  public function createMembership($user_id, $organization_id) {
+    $body = array(
+      'organization_membership' => array(
+        'user_id' => $user_id,
+        'organization_id' => $organization_id,
+      ),
+    );
+    $data = $this->post("users/${user_id}/organization_memberships", $body);
+    return $data->organization_membership;
+  }
+
+  /**
+   * Deletes an organization membership.
+   *
+   * If attempting to delete a non-existent record, it is the caller's
+   * responsibility to catch the exception. The HTTP response code and message
+   * are stored in the exception instance.
+   *
+   * @param int $user_id
+   *   The user ID on which to delete the membership.
+   * @param int $membership_id
+   *   The ID of the membership to delete.
+   *
+   * @throws \Acquia\Zendesk\RecordNotFound
+   *   If attempting to delete a non-existent record.
+   */
+  public function deleteMembership($user_id, $membership_id) {
+    $this->request('DELETE', "users/${user_id}/organization_memberships/${membership_id}");
+  }
+
+  /**
+   * Sets the default organization membership for a user.
+   *
+   * @param int $user_id
+   *   The user ID to set the default membership on.
+   * @param int $membership_id
+   *   The ID of the membership to set as the default.
+   *
+   * @return object
+   *   The organization memberships from the response.
+   */
+  public function setDefaultMembership($user_id, $membership_id) {
+    $data = $this->request('PUT', "users/${user_id}/organization_memberships/${membership_id}/make_default");
+    return $data->organization_memberships;
+  }
+
+  /**
    * Gets a ticket by ticket ID.
    *
    * @param int $ticket_id
@@ -583,6 +855,48 @@ class ZendeskApi {
    */
   public function deleteAttachment($attachment_id) {
     $this->request('DELETE', "attachments/${attachment_id}");
+  }
+
+  /**
+   * Makes a POST request.
+   *
+   * @param string $resource
+   *   The resource URI.
+   * @param mixed $body
+   *   The body of the request.
+   *
+   * @return object
+   *   The response object of the request.
+   */
+  public function post($resource, $body) {
+    return $this->request('POST', $resource, array(), $body);
+  }
+
+  /**
+   * Makes a GET request for a collection.
+   *
+   * Collections are paged and as such the current page and limit of items per
+   * page may be specified.
+   *
+   * @param string $resource
+   *   The resource URI.
+   * @param array $parameters
+   *   An array of request parameters to generate the URL query string for the
+   *   request.
+   * @param int $page
+   *   The page of results to fetch.
+   * @param int $limit
+   *   The number of items to fetch per page.
+   *
+   * @return object
+   *   The response object of the request.
+   */
+  public function requestCollection($resource, $parameters, $page = 1, $limit = 100) {
+    $parameters += array(
+      'page' => $page,
+      'per_page' => $limit,
+    );
+    return $this->request('GET', $resource, $parameters);
   }
 
   /**
