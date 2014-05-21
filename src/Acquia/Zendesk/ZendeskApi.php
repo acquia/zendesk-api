@@ -43,6 +43,20 @@ class ZendeskApi {
   }
 
   /**
+   * Gets the status of a job.
+   *
+   * @param int $job_id
+   *   The ID of the job to retrieve.
+   *
+   * @return object
+   *   The job status object from the response.
+   */
+  public function getJobStatus($job_id) {
+    $data = $this->request('GET', "job_statuses/${job_id}");
+    return $data->job_status;
+  }
+
+  /**
    * Gets a user by user ID.
    *
    * @param int $user_id
