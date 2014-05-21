@@ -179,8 +179,9 @@ class ZendeskApi {
   /**
    * Ensure a user exists by creating it if necessary.
    *
-   * This method will overwrite an existing user entity's properties by those
-   * in the provided user entity.
+   * If the given user entity contains an organization_id field, an organization
+   * membership will be created (meaning the existing user will be assigned into
+   * the specified organization).
    *
    * @param array|object $user
    *   The user information for the user to be created or modified. See the
@@ -188,24 +189,43 @@ class ZendeskApi {
    *
    * @return object
    *   The created or modified user object.
+   *
+   * @throws \Acquia\Zendesk\ClientErrorException
+   *   If a ClientErrorException was caught but wasn't a 422 Unprocessible
+   *   Entity error.
    */
-  public function ensureUser($user) {
+  public function ensureUserExists($user) {
     if (is_array($user)) {
       $user = (object) $user;
     }
 
     // Search for an existing user by email.
     $result = $this->getUsersSearch('email:' . $user->email);
-
-    // If the user exists, modify the user based on the provided user entity.
     if (!empty($result->users[0])) {
       $existing_user = $result->users[0];
-      $composite_user = array_merge((array) $existing_user, (array) $user);
-      $this->modifyUser($existing_user->id, $composite_user);
+
+      // If an organization_id has been specified in the given user entity
+      // object, handle the assignment of the user into the organization using
+      // the membership API.
+      if (!empty($user->organization_id)) {
+        try {
+          $this->createMembership($existing_user->id, $user->organization_id);
+        }
+        catch (ClientErrorException $e) {
+          // If the membership already exists, a 422 Unprocessible Entity is
+          // returned. We could go further and string-match the returned error
+          // message but we already know for sure that the user ID is correct
+          // and in all likelihood the client error was returned because the
+          // user is already a member of the specified organization.
+          if ($e->getCode() !== 422) {
+            // If this isn't what we're looking for, re-throw the exception.
+            throw new ClientErrorException($e->getMessage(), $e->getCode(), $e->getErrors());
+          }
+        }
+      }
     }
     else {
-      // Otherwise, if the user does not exist, just go ahead and create the
-      // user.
+      // If the user entity doesn't exist, create it.
       $this->createUser($user);
     }
   }
