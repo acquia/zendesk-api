@@ -4,10 +4,6 @@ namespace Acquia\Zendesk;
 
 use Acquia\Zendesk\ZendeskRequest;
 use Acquia\Zendesk\MissingCredentialsException;
-use Acquia\Zendesk\CurlErrorException;
-use Acquia\Zendesk\TooManyRequestsException;
-use Acquia\Zendesk\ClientErrorException;
-use Acquia\Zendesk\ServerErrorException;
 
 class ZendeskApi {
 

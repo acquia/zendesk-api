@@ -2,6 +2,11 @@
 
 namespace Acquia\Zendesk;
 
+use Acquia\Zendesk\CurlErrorException;
+use Acquia\Zendesk\ClientErrorException;
+use Acquia\Zendesk\TooManyRequestsException;
+use Acquia\Zendesk\ServerErrorException;
+
 class ZendeskRequest {
 
   const ENDPOINT_PATTERN = 'https://%s.zendesk.com/api/v2';
