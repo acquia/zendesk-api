@@ -258,7 +258,7 @@ class ZendeskRequest {
             throw $exception;
         }
 
-        throw new ClientErrorException($error_message, $status, NULL, $data);
+        throw new ClientErrorException($error_message, $status, $data);
 
       case '5':
         throw new ServerErrorException($error_message, $status);
