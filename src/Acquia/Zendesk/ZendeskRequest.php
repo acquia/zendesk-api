@@ -205,8 +205,11 @@ class ZendeskRequest {
     curl_setopt($handle, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt($handle, CURLOPT_TIMEOUT, 10);
     curl_setopt($handle, CURLOPT_ENCODING, '');
-    curl_setopt($handle, CURLOPT_VERBOSE, TRUE);
     curl_setopt($handle, CURLOPT_HEADER, TRUE);
+
+    if ($options['debug']) {
+      curl_setopt($handle, CURLOPT_VERBOSE, TRUE);
+    }
 
     $response = curl_exec($handle);
     $curl_errno = curl_errno($handle);

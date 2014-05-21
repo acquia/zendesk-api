@@ -8,6 +8,7 @@ use Acquia\Zendesk\MissingCredentialsException;
 class ZendeskApi {
 
   protected $client;
+  private $debug = FALSE;
 
   /**
    * Initializes the Zendesk API service.
@@ -35,6 +36,10 @@ class ZendeskApi {
       // @todo Pass credentials into the injected client object.
       $this->client = $client;
     }
+  }
+
+  public function enableDebug() {
+    $this->debug = TRUE;
   }
 
   /**
@@ -574,6 +579,9 @@ class ZendeskApi {
    *   The response object.
    */
   public function request($method, $resource, $parameters = array(), $body = NULL, $headers = array(), $options = array()) {
+    if ($this->debug) {
+      $options['debug'] = TRUE;
+    }
     return $this->client->request($method, $resource, $parameters, $body, $headers, $options);
   }
 
