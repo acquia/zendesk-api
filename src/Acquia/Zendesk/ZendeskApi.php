@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains \Acquia\Zendesk\ZendeskApi.
+ */
+
 namespace Acquia\Zendesk;
 
 use Acquia\Zendesk\ZendeskRequest;
@@ -22,7 +27,7 @@ class ZendeskApi {
    * @param ZendeskRequest $client
    *   The HTTP client object responsible for making HTTP requests.
    *
-   * @throws MissingCredentialsException
+   * @throws \Acquia\Zendesk\MissingCredentialsException
    *   If any of the required Zendesk credentials are missing.
    */
   public function __construct($subdomain, $username, $api_key, ZendeskRequest $client = NULL) {
@@ -38,6 +43,9 @@ class ZendeskApi {
     }
   }
 
+  /**
+   * Enables debugging mode.
+   */
   public function enableDebug() {
     $this->debug = TRUE;
   }
@@ -96,7 +104,7 @@ class ZendeskApi {
    * @return object
    *   The response object of the request containing the defined set of users.
    */
-  public function getUsers($roles = array(), $custom_role_id = NULL) {
+  public function getUsers(array $roles = array(), $custom_role_id = NULL) {
     $parameters = array(
       'role' => $roles,
       'permission_set' => $custom_role_id,
@@ -118,7 +126,7 @@ class ZendeskApi {
    * @return object
    *   The response object of the request containing the defined set of users.
    */
-  public function getUsersByGroup($group_id, $roles = array(), $custom_role_id = NULL) {
+  public function getUsersByGroup($group_id, array $roles = array(), $custom_role_id = NULL) {
     $parameters = array(
       'role' => $roles,
       'permission_set' => $custom_role_id,
@@ -161,7 +169,8 @@ class ZendeskApi {
    *   The user information for the user to be created. Possible properties:
    *   - name (required): The name of the user e.g. "John Doe".
    *   - email (required): The email address of the user.
-   *   - verified (bool): Whether the account should be considered already verified
+   *   - verified (bool): Whether the account should be considered already
+   *     verified.
    *     (setting this to true will create a user without sending out a
    *     verification email.
    *   - role: The role of the user.
@@ -186,9 +195,6 @@ class ZendeskApi {
    * @param array|object $user
    *   The user information for the user to be created or modified. See the
    *   createUser method documentation for further details.
-   *
-   * @return object
-   *   The created or modified user object.
    *
    * @throws \Acquia\Zendesk\ClientErrorException
    *   If a ClientErrorException was caught but wasn't a 422 Unprocessible
@@ -284,7 +290,7 @@ class ZendeskApi {
    *   Whether or not to list only assignable groups.
    *
    * @return object
-   *  The response object of the request containing the list of groups.
+   *   The response object of the request containing the list of groups.
    */
   public function getGroups($assignable = FALSE) {
     $resource = 'groups';
@@ -462,7 +468,7 @@ class ZendeskApi {
    * @return object
    *   The job status object from the response.
    */
-  public function createOrganizations($names) {
+  public function createOrganizations(array $names) {
     $body = array(
       'organizations' => array(),
     );
@@ -478,13 +484,13 @@ class ZendeskApi {
    *
    * @param int $organization_id
    *   The organization ID to update.
-   * @param array $data
+   * @param array $organization
    *   The data to update on the organization.
    *
    * @return object
    *   The updated organization object.
    */
-  public function updateOrganization($organization_id, $organization) {
+  public function updateOrganization($organization_id, array $organization) {
     $body = array(
       'organization' => $organization,
     );
@@ -649,7 +655,7 @@ class ZendeskApi {
    * @return object
    *   An object of tickets in chronological order.
    */
-  public function getTickets($ticket_ids = NULL) {
+  public function getTickets(array $ticket_ids = NULL) {
     if (!empty($ticket_ids) && is_array($ticket_ids)) {
       $data = $this->request('GET', 'tickets/show_many', array('ids' => implode(',', $ticket_ids)));
     }
@@ -911,7 +917,7 @@ class ZendeskApi {
    * @return object
    *   The response object of the request.
    */
-  public function requestCollection($resource, $parameters, $page = 1, $limit = 100) {
+  public function requestCollection($resource, array $parameters, $page = 1, $limit = 100) {
     $parameters += array(
       'page' => $page,
       'per_page' => $limit,
@@ -929,17 +935,17 @@ class ZendeskApi {
    * @param array $parameters
    *   An array of request parameters to generate the URL query string for the
    *   request.
-   * @param array $headers
-   *   An array of additional HTTP headers.
    * @param mixed $body
    *   The body of the request.
+   * @param array $headers
+   *   An array of additional HTTP headers.
    * @param array $options
    *   An array of request options.
    *
    * @return object
    *   The response object of the request.
    */
-  public function request($method, $resource, $parameters = array(), $body = NULL, $headers = array(), $options = array()) {
+  public function request($method, $resource, array $parameters = array(), $body = NULL, array $headers = array(), array $options = array()) {
     if ($this->debug) {
       $options['debug'] = TRUE;
     }
@@ -947,4 +953,3 @@ class ZendeskApi {
   }
 
 }
-

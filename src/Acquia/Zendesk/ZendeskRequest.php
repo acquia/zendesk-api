@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains \Acquia\Zendesk\ZendeskRequest.
+ */
+
 namespace Acquia\Zendesk;
 
 use Acquia\Zendesk\CurlErrorException;
@@ -14,7 +19,7 @@ class ZendeskRequest {
 
   protected $subdomain;
   protected $username;
-  protected $api_key;
+  protected $apiKey;
   protected $headers;
 
   /**
@@ -30,7 +35,7 @@ class ZendeskRequest {
   public function __construct($subdomain, $username, $api_key) {
     $this->subdomain = $subdomain;
     $this->username = $username;
-    $this->api_key = $api_key;
+    $this->apiKey = $api_key;
     $this->endpoint = sprintf(self::ENDPOINT_PATTERN, $subdomain);
   }
 
@@ -81,7 +86,7 @@ class ZendeskRequest {
    *   An indexed array of individual fully-formed HTTP headers, as expected by
    *   curl's CURLOPT_HTTPHEADER option.
    */
-  public function formatRequestHeaders($headers) {
+  public function formatRequestHeaders(array $headers) {
     $formatted = array();
     foreach ($headers as $name => $value) {
       $formatted[] = sprintf('%s: %s', $name, $value);
@@ -148,7 +153,7 @@ class ZendeskRequest {
    *   The authentication string.
    */
   protected function getAuth() {
-    return sprintf('%s/token:%s', $this->username, $this->api_key);
+    return sprintf('%s/token:%s', $this->username, $this->apiKey);
   }
 
   /**
@@ -161,28 +166,28 @@ class ZendeskRequest {
    * @param array $parameters
    *   An array of request parameters to generate the URL query string for the
    *   request.
-   * @param array $headers
-   *   An array of additional HTTP headers.
    * @param mixed $body
    *   The body of the request.
+   * @param array $headers
+   *   An array of additional HTTP headers.
    * @param array $options
    *   An array of request options.
    *
    * @return object
    *   The response object.
    *
-   * @throws CurlErrorException
+   * @throws \Acquia\Zendesk\CurlErrorException
    *   If an error occurred with the curl call.
-   * @throws ClientErrorException
+   * @throws \Acquia\Zendesk\ClientErrorException
    *   If a client error was received from the API.
-   * @throws ServerErrorException
+   * @throws \Acquia\Zendesk\ServerErrorException
    *   If a server error was received from the API.
-   * @throws TooManyRequestsException
+   * @throws \Acquia\Zendesk\TooManyRequestsException
    *   If the request triggered Zendesk's rate limiting feature. See the
    *   custom exception class for how to retrieve the value of the Retry-After
    *   header.
    */
-  public function request($method, $resource, $parameters = array(), $body = NULL, $headers = array(), $options = array()) {
+  public function request($method, $resource, array $parameters = array(), $body = NULL, array $headers = array(), array $options = array()) {
     $handle = curl_init();
 
     curl_setopt($handle, CURLOPT_URL, $this->buildRequestUrl($resource, $parameters));
