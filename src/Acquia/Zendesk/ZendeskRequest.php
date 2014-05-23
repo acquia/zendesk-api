@@ -213,7 +213,7 @@ class ZendeskRequest {
     curl_setopt($handle, CURLOPT_ENCODING, '');
     curl_setopt($handle, CURLOPT_HEADER, TRUE);
 
-    if ($options['debug']) {
+    if (!empty($options['debug'])) {
       curl_setopt($handle, CURLOPT_VERBOSE, TRUE);
     }
 
