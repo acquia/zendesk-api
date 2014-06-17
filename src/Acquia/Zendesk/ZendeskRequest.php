@@ -233,15 +233,7 @@ class ZendeskRequest {
 
     $status_class = floor($status / 100);
     if ($status_class >= 4) {
-      if (!empty($data->error)) {
-        $error_message = sprintf('%s %s: %s', $status, $data->error, print_r($data, TRUE));
-      }
-      elseif (is_string($data)) {
-        $error_message = sprintf('%s %s', $status, $data);
-      }
-      else {
-        $error_message = sprintf('%s %s', $status, print_r($data, TRUE));
-      }
+      $error_message = sprintf('%s: %s', $status, print_r($data, TRUE));
     }
     switch ($status_class) {
       case '4':
